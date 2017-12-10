@@ -48,14 +48,15 @@ function setEvents(player) {
         }
     };
 }
-function initVimeoPlayer(vid, width, setEvents) {
+function initVimeoPlayer(vid, height, setEvents) {
     var d = document.createElement("div");
+    d.style.textAlign = "center";
     d.id = "vp";
     document.body.appendChild(d);
 
     var options = {
         id: vid,
-        width: width,
+        height: height,
         autoplay: true,
         loop: false
     };
@@ -64,7 +65,7 @@ function initVimeoPlayer(vid, width, setEvents) {
 }
 
 var nfmsg = "Video not found.\nThis bookmarklet can be used in only the page has Vimeo embedded player or original Vimeo video page."; 
-if (Vimeo == null) { window.alert(nfmsg); return; }
+if (typeof Vimeo === "undefined") { window.alert(nfmsg); return; }
 
 if (Vimeo.Player != null) {
     var iframe = document.querySelector('iframe');
@@ -75,21 +76,27 @@ if (Vimeo.Player != null) {
 
 var pc = document.querySelector(".player_container");
 if (pc == null) { window.alert(nfmsg); return; }
-var vid = pc.querySelector("div").id;
+var vid = String(pc.id).replace("clip_", "");
 if (vid == null) { window.alert(nfmsg); return; }
-var width = document.body.clientWidth;
+var h = window.innerHeight;
 var w = window.open();
 w.document.body.style.margin = 0;
 var sv = w.document.createElement("script");
 sv.src = "https://player.vimeo.com/api/player.js";
 var done = false;
-sv.onload = sv.onreadystatechange = function() {
+var callback = function() {
     if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
         done = true;
-        var s = document.createElement("script");
-        s.innerHTML = "void(" + initVimeoPlayer.toString() + ")(" + vid + "," + width + ", " + setEvents.toString() + ");";
+        var s = w.document.createElement("script");
+        s.innerHTML = "void(" + initVimeoPlayer.toString() + ")(" + vid + "," + h + ", " + setEvents.toString() + ");";
         w.document.body.appendChild(s);
     }
 };
+if(sv.addEventListener) {
+    sv.addEventListener("load", callback, false);
+} else if(s.readyState) {
+    sv.onreadystatechange = callback;
+}
+
 w.document.getElementsByTagName('head')[0].appendChild(sv);
 })());
